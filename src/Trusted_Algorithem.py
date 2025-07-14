@@ -1,8 +1,48 @@
-import cv2, numpy as np, json, sys, os
+import cv2, numpy as np, json, sys, os, glob
 import insightface
 from insightface.app import FaceAnalysis
 
-def analyze_video(video_path, output_path='output_offline/trusted_retinaface.json'):
+def get_video_choice():
+    """Ask user to choose which video to analyze"""
+    input_folder = r"C:\Users\Shahar Golan\VisualStudioProjects\Face_Detaction\input"
+    
+    # Get all video files in input folder
+    video_extensions = ['*.mp4', '*.avi', '*.mov', '*.mkv', '*.wmv']
+    video_files = []
+    
+    for ext in video_extensions:
+        video_files.extend(glob.glob(os.path.join(input_folder, ext)))
+    
+    if not video_files:
+        print("❌ No video files found in input folder!")
+        return None, None
+    
+    print("🎬 Available videos:")
+    for i, video_path in enumerate(video_files, 1):
+        video_name = os.path.basename(video_path)
+        print(f"{i}. {video_name}")
+    
+    while True:
+        try:
+            choice = int(input(f"\nSelect video (1-{len(video_files)}): "))
+            if 1 <= choice <= len(video_files):
+                selected_video = video_files[choice - 1]
+                return selected_video, str(choice)
+            else:
+                print(f"Please enter a number between 1 and {len(video_files)}")
+        except ValueError:
+            print("Please enter a valid number")
+
+def analyze_video(video_path, video_number):
+    """Analyze video and save results to numbered directory"""
+    # Create output directory based on video number
+    output_dir = f"output_offline/{video_number}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+    
+    output_path = os.path.join(output_dir, f"trusted_retinaface_{video_number}.json")
+    output_path = os.path.join(output_dir, f"trusted_retinaface_{video_number}.json")
+    
     if not os.path.exists(os.path.dirname(output_path)):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -39,5 +79,11 @@ def analyze_video(video_path, output_path='output_offline/trusted_retinaface.jso
     print(f"✅ Saved results for {frame_id} frames to: {output_path}")
 
 if __name__ == "__main__":
-    video_path = r"C:\Users\Shahar Golan\VisualStudioProjects\Face_Detaction\input\2.mp4"
-    analyze_video(video_path)
+    # Ask user to choose video
+    video_path, video_number = get_video_choice()
+    
+    if video_path and video_number:
+        print(f"🎯 Selected: {os.path.basename(video_path)}")
+        analyze_video(video_path, video_number)
+    else:
+        print("❌ No video selected. Exiting.")
